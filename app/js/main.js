@@ -1,18 +1,28 @@
 let btnPrev = document.querySelector(".btn__prev");
 let btnNext = document.querySelector(".btn__next");
-
-let images = document.querySelectorAll(".slider__img");
 let gallery = document.querySelector(".slider__gallery");
 
-let anatolySlider = new Slider(gallery);
+let loadPromise = new Promise(function (resolve, reject) {
+  [...gallery.children].forEach(function (image) {
+    if (!image.complete) {
+      image.addEventListener("load", (event) => {
+        resolve();
+      });
+    } else resolve();
+  });
+});
 
-btnNext.addEventListener("click", anatolySlider.moveForward);
-btnPrev.addEventListener("click", anatolySlider.moveBackward);
+loadPromise.then(
+  () => {
+    let anatolySlider = new Slider(gallery);
+    btnNext.addEventListener("click", () => anatolySlider.moveSlide("forward"));
+    btnPrev.addEventListener("click", () => anatolySlider.moveSlide("backward"));
+  }
+);
 
 function Slide(image) {
   this.image = image;
-  this.width = image.width;
-  this.height = image.height;
+  this.height = window.getComputedStyle(image).height;
   this.next = null;
   this.prev = null;
 }
@@ -22,12 +32,7 @@ function Slider(gallery) {
   let head = null;
   let tail = null;
   let active = null;
-  this.size = function () {
-    return length;
-  };
-  this.head = function () {
-    return head;
-  };
+
   let initialization = (function () {
     let node = null;
     let images = [...gallery.children];
@@ -37,7 +42,7 @@ function Slider(gallery) {
         head = node;
         tail = node;
         active = head;
-        gallery.style.height = active.height + "px";
+        gallery.style.height = active.height;
       } else {
         tail.next = node;
         node.prev = tail;
@@ -49,7 +54,7 @@ function Slider(gallery) {
     head.prev = tail;
   })();
 
-  let transformAnimation = function(slide, start, end) {
+  let transformAnimation = function (slide, start, end) {
     return slide.image.animate(
       [
         {
@@ -68,11 +73,11 @@ function Slider(gallery) {
     );
   };
 
-  let heightAnimation = function(slide, height) {
+  let heightAnimation = function (slide) {
     return gallery.animate(
       [
         {
-          height: `${slide.height}px`,
+          height: slide.height,
           easing: "ease-in",
         },
       ],
@@ -80,30 +85,36 @@ function Slider(gallery) {
         duration: 500,
         fill: "forwards",
       }
-      );
-  }
-
-  this.moveForward = async function() {
-    let animationActiveSlide = transformAnimation(active, "0px", `-${width}`);
-    active.next.image.classList.toggle("slider__img_active");
-    let animationNextSlide = transformAnimation(active.next, width, "0px");
-    let animationGalleryHeight = heightAnimation(active.next, `${active.next.height}px`)
-
-    await animationActiveSlide.finished;
-    await animationNextSlide.finished;
-    active.image.classList.toggle("slider__img_active");
-    active = active.next;
+    );
   };
 
-  this.moveBackward = async function() {
-    let animationActiveSlide = transformAnimation(active, "0px", width);
-    active.prev.image.classList.toggle("slider__img_active");
-    let animationNextSlide = transformAnimation(active.prev, `-${width}`, "0px");
-    let animationGalleryHeight = heightAnimation(active.prev, `${active.prev.height}px`)
+  this.moveSlide = async function (direction) {
+    let startPosition;
+    let endPosition;
+    let neighborSlide;
 
+    if (direction == "forward") {
+      startPosition = width;
+      endPosition = `-${width}`;
+      neighborSlide = active.next;
+    }
+    if (direction == "backward") {
+      startPosition = `-${width}`;
+      endPosition = width;
+      neighborSlide = active.prev;
+    }
+
+    let animationActiveSlide = transformAnimation(active, "0px", endPosition);
+    neighborSlide.image.classList.toggle("slider__img_active");
+    let animationNeighborSlide = transformAnimation(
+      neighborSlide,
+      startPosition,
+      "0px"
+    );
+    heightAnimation(neighborSlide);
     await animationActiveSlide.finished;
-    await animationNextSlide.finished;
+    await animationNeighborSlide.finished;
     active.image.classList.toggle("slider__img_active");
-    active = active.prev;
-  }
+    active = neighborSlide;
+  };
 }
