@@ -79,13 +79,13 @@ select {
   }
 }
 
-.slider {
 
+.slider, .another-slider {
   &__gallery {
     position: relative;
     align-items: center;
-    width: 500px;
-    margin: 10px auto;
+    width: 400px;
+    margin: 30px auto 10px;
     height: 0px;
     overflow: hidden;
     transition: height 0.5s;
@@ -102,9 +102,10 @@ select {
 .nav {
   display: flex;
   gap: 10px;
+  justify-content: center;
   margin-top: 10px;
 }
 .btn {
   height: 50px;
-  width: 50%;
+  width: 10%;
 }

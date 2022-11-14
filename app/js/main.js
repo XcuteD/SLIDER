@@ -1,24 +1,22 @@
-let btnPrev = document.querySelector(".btn__prev");
-let btnNext = document.querySelector(".btn__next");
-let gallery = document.querySelector(".slider__gallery");
+window.addEventListener("load", function () {
+  let btnPrev = document.querySelector(".btn__prev");
+  let btnNext = document.querySelector(".btn__next");
+  let gallery = document.querySelector(".slider__gallery");
+  let anatolySlider = new Slider(gallery);
+  btnNext.addEventListener("click", () => anatolySlider.moveSlide("forward"));
+  btnPrev.addEventListener("click", () => anatolySlider.moveSlide("backward"));
 
-let loadPromise = new Promise(function (resolve, reject) {
-  [...gallery.children].forEach(function (image) {
-    if (!image.complete) {
-      image.addEventListener("load", (event) => {
-        resolve();
-      });
-    } else resolve();
-  });
+  let anotherBtnPrev = document.querySelector(".another-btn__prev");
+  let anotherBtnNext = document.querySelector(".another-btn__next");
+  let anotherGallery = document.querySelector(".another-slider__gallery");
+  let andrewSlider = new Slider(anotherGallery);
+  anotherBtnNext.addEventListener("click", () =>
+    andrewSlider.moveSlide("forward")
+  );
+  anotherBtnPrev.addEventListener("click", () =>
+    andrewSlider.moveSlide("backward")
+  );
 });
-
-loadPromise.then(
-  () => {
-    let anatolySlider = new Slider(gallery);
-    btnNext.addEventListener("click", () => anatolySlider.moveSlide("forward"));
-    btnPrev.addEventListener("click", () => anatolySlider.moveSlide("backward"));
-  }
-);
 
 function Slide(image) {
   this.image = image;
@@ -55,22 +53,24 @@ function Slider(gallery) {
   })();
 
   let transformAnimation = function (slide, start, end) {
-    return slide.image.animate(
-      [
-        {
-          transform: `translateX(${start})`,
-          easing: "ease-in",
-        },
-        {
-          transform: `translateX(${end})`,
-          easing: "ease-in",
-        },
-      ],
+    let animation = [
       {
-        duration: 500,
-        fill: "forwards",
-      }
-    );
+        transform: `translateX(${start})`,
+        easing: "ease-in",
+      },
+      {
+        transform: `translateX(${end})`,
+        easing: "ease-in",
+      },
+    ];
+
+    animation[0].opacity = +(slide == active);
+    animation[1].opacity = +!(slide == active);
+
+    return slide.image.animate(animation, {
+      duration: 500,
+      fill: "forwards",
+    });
   };
 
   let heightAnimation = function (slide) {
@@ -97,15 +97,13 @@ function Slider(gallery) {
       startPosition = width;
       endPosition = `-${width}`;
       neighborSlide = active.next;
-    }
-    if (direction == "backward") {
+    } else if (direction == "backward") {
       startPosition = `-${width}`;
       endPosition = width;
       neighborSlide = active.prev;
     }
 
     let animationActiveSlide = transformAnimation(active, "0px", endPosition);
-    neighborSlide.image.classList.toggle("slider__img_active");
     let animationNeighborSlide = transformAnimation(
       neighborSlide,
       startPosition,
@@ -114,7 +112,6 @@ function Slider(gallery) {
     heightAnimation(neighborSlide);
     await animationActiveSlide.finished;
     await animationNeighborSlide.finished;
-    active.image.classList.toggle("slider__img_active");
     active = neighborSlide;
   };
 }
