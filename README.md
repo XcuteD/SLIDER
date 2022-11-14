@@ -1,8 +1,3 @@
-//first step
+first step --> npm i
 
-npm i
-
-
-//second step
-
-gulp
+second step --> gulp
